@@ -1,5 +1,4 @@
 ﻿using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -36,14 +35,52 @@ namespace testdo
             Assert.AreNotSame(dispatcher, threadDispatcher);
         }
 
+        [TestMethod]
+        public void DispatcherThreadProperty()
+        {
+            Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
+
+            Assert.IsNotNull(dispatcher.Thread);
+            Assert.AreSame(dispatcher.Thread, Thread.CurrentThread);
+        }
+
+        [TestMethod]
+        public void HasShutdownStartedFinishedProperties()
+        {
+            Dispatcher dispatcher = null;
+            var dispatcherAvailableEvent = new AutoResetEvent(false);
+
+            var thread = new Thread(() =>
+            {
+                dispatcher = Dispatcher.CurrentDispatcher; // Creates dispatcher for thread
+                dispatcherAvailableEvent.Set();
+                Dispatcher.Run();
+            });
+            thread.Start();
+
+            dispatcherAvailableEvent.WaitOne();
+
+            Assert.IsFalse(dispatcher.HasShutdownStarted);
+            Assert.IsFalse(dispatcher.HasShutdownFinished);
+            dispatcher.InvokeShutdown();
+            Assert.IsTrue(dispatcher.HasShutdownStarted);
+
+            thread.Join();
+            Assert.IsTrue(dispatcher.HasShutdownFinished);
+        }
+
+
         private static Dispatcher CreateDispatcherOnOtherThread()
         {
             Dispatcher dispatcher = null;
 
-            Task.Run(() =>
+            var thread = new Thread(() =>
             {
                 dispatcher = Dispatcher.CurrentDispatcher;
-            }).Wait();
+            });
+
+            thread.Start();
+            thread.Join();
 
             return dispatcher;
         }
