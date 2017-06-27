@@ -69,6 +69,34 @@ namespace testdo
             Assert.IsTrue(dispatcher.HasShutdownFinished);
         }
 
+        [TestMethod]
+        public void InvokeThread()
+        {
+            Dispatcher dispatcher = null;
+            bool invoked = false;
+            var dispatcherAvailableEvent = new AutoResetEvent(false);
+
+            var thread = new Thread(() =>
+            {
+                dispatcher = Dispatcher.CurrentDispatcher; // Creates dispatcher for thread
+                dispatcherAvailableEvent.Set();
+                Dispatcher.Run();
+            });
+            thread.Start();
+
+            dispatcherAvailableEvent.WaitOne();
+
+            dispatcher.Invoke(() =>
+            {
+                invoked = true;
+                Assert.AreSame(thread, Thread.CurrentThread);
+            });
+
+            Assert.IsTrue(invoked);
+
+            dispatcher.InvokeShutdown();
+            thread.Join();
+        }
 
         private static Dispatcher CreateDispatcherOnOtherThread()
         {
