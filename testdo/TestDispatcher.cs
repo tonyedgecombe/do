@@ -8,7 +8,7 @@ namespace testdo
     public class TestDispatcher
     {
         [TestMethod]
-        public void TestCurrentDispatcher()
+        public void CurrentDispatcher()
         {
             Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
 
@@ -16,7 +16,7 @@ namespace testdo
         }
 
         [TestMethod]
-        public void TestCurrentIsSameAsThread()
+        public void CurrentIsSameAsThread()
         {
             Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
             Dispatcher threadDispatcher = Dispatcher.FromThread(Thread.CurrentThread);

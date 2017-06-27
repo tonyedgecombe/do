@@ -13,21 +13,21 @@ namespace testdo
         }
 
         [TestMethod]
-        public void TestCheckAccessOnSameThread()
+        public void CheckAccessOnSameThread()
         {
             DispatcherObject d = new MyDispatcherObject();
             Assert.IsTrue(d.CheckAccess());
         }
 
         [TestMethod]
-        public void TestVerifyAccessOnSameThread()
+        public void VerifyAccessOnSameThread()
         {
             DispatcherObject d = new MyDispatcherObject();
             d.VerifyAccess();
         }
 
         [TestMethod]
-        public void TestCheckAccessOnDifferentThread()
+        public void CheckAccessOnDifferentThread()
         {
             var dispatcherObject = CreateDispatcherObjectOnThread();
 
@@ -35,7 +35,7 @@ namespace testdo
         }
 
         [TestMethod]
-        public void TestVerifyAccessOnDifferentThread()
+        public void VerifyAccessOnDifferentThread()
         {
             var dispatcherObject = CreateDispatcherObjectOnThread();
 
@@ -43,7 +43,7 @@ namespace testdo
         }
 
         [TestMethod]
-        public void TestDispatcherOnSameThread()
+        public void DispatcherOnSameThread()
         {
             var d1 = new MyDispatcherObject();
             var d2 = new MyDispatcherObject();
@@ -54,7 +54,7 @@ namespace testdo
         }
 
         [TestMethod]
-        public void TestDispatcherOnDifferentThreads()
+        public void DispatcherOnDifferentThreads()
         {
             var d1 = CreateDispatcherObjectOnThread();
             var d2 = CreateDispatcherObjectOnThread();
