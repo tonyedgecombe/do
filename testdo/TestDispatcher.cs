@@ -115,7 +115,7 @@ namespace testdo
             thread.Start();
             dispatcherAvailableEvent.WaitOne();
 
-            var stop = new AutoResetEvent(false);
+            var stop = new AutoResetEvent(false); // Don't think I need this, Yield breaks the loop
             dispatcher.BeginInvoke(new Action(async () =>
             {
                 while (!stop.WaitOne(10))
