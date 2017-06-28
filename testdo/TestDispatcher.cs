@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Windows.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -94,6 +95,44 @@ namespace testdo
 
             Assert.IsTrue(invoked);
 
+            dispatcher.InvokeShutdown();
+            thread.Join();
+        }
+
+        [TestMethod]
+        public void Yield()
+        {
+            Dispatcher dispatcher = null;
+
+            var dispatcherAvailableEvent = new AutoResetEvent(false);
+
+            var thread = new Thread(() =>
+            {
+                dispatcher = Dispatcher.CurrentDispatcher; // Creates dispatcher for thread
+                dispatcherAvailableEvent.Set();
+                Dispatcher.Run();
+            });
+            thread.Start();
+            dispatcherAvailableEvent.WaitOne();
+
+            var stop = new AutoResetEvent(false);
+            dispatcher.BeginInvoke(new Action(async () =>
+            {
+                while (!stop.WaitOne(10))
+                {
+                    await Dispatcher.Yield();
+                }
+            }));
+
+            bool flag = false;
+            dispatcher.Invoke(() =>
+            {
+                flag = true;
+            });
+
+            Assert.IsTrue(flag);
+
+            stop.Set();
             dispatcher.InvokeShutdown();
             thread.Join();
         }
