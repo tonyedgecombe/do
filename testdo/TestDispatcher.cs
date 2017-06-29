@@ -104,6 +104,34 @@ namespace testdo
             dispatcher.Thread.Join();
         }
 
+
+        [TestMethod]
+        public void Frame()
+        {
+            Dispatcher dispatcher = null;
+            DispatcherFrame frame = null;
+            var dispatcherAvailableEvent = new AutoResetEvent(false);
+
+            var thread = new Thread(() =>
+            {
+                dispatcher = Dispatcher.CurrentDispatcher; // Creates dispatcher for thread
+                frame = new DispatcherFrame(false);
+
+                dispatcherAvailableEvent.Set();
+                Dispatcher.PushFrame(frame);
+            });
+            thread.Start();
+            dispatcherAvailableEvent.WaitOne();
+
+            dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
+            {
+                frame.Continue = false;
+            }));
+
+            dispatcher.Thread.Join();
+        }
+
+
         private Dispatcher CreateDispatcherOnNewThread()
         {
             Dispatcher dispatcher = null;
