@@ -29,7 +29,7 @@ namespace testdo
         public void CurrentIsDifferentToOtherThread()
         {
             Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
-            Dispatcher threadDispatcher = CreateDispatcherOnOtherThread();
+            Dispatcher threadDispatcher = CreateDispatcherOnNewThread();
 
             Assert.IsNotNull(dispatcher);
             Assert.IsNotNull(threadDispatcher);
@@ -48,72 +48,39 @@ namespace testdo
         [TestMethod]
         public void HasShutdownStartedFinishedProperties()
         {
-            Dispatcher dispatcher = null;
-            var dispatcherAvailableEvent = new AutoResetEvent(false);
-
-            var thread = new Thread(() =>
-            {
-                dispatcher = Dispatcher.CurrentDispatcher; // Creates dispatcher for thread
-                dispatcherAvailableEvent.Set();
-                Dispatcher.Run();
-            });
-            thread.Start();
-
-            dispatcherAvailableEvent.WaitOne();
+            Dispatcher dispatcher = CreateDispatcherOnNewThread();
 
             Assert.IsFalse(dispatcher.HasShutdownStarted);
             Assert.IsFalse(dispatcher.HasShutdownFinished);
             dispatcher.InvokeShutdown();
             Assert.IsTrue(dispatcher.HasShutdownStarted);
 
-            thread.Join();
+            dispatcher.Thread.Join();
             Assert.IsTrue(dispatcher.HasShutdownFinished);
         }
 
         [TestMethod]
         public void InvokeThread()
         {
-            Dispatcher dispatcher = null;
+            Dispatcher dispatcher = CreateDispatcherOnNewThread();
             bool invoked = false;
-            var dispatcherAvailableEvent = new AutoResetEvent(false);
-
-            var thread = new Thread(() =>
-            {
-                dispatcher = Dispatcher.CurrentDispatcher; // Creates dispatcher for thread
-                dispatcherAvailableEvent.Set();
-                Dispatcher.Run();
-            });
-            thread.Start();
-
-            dispatcherAvailableEvent.WaitOne();
 
             dispatcher.Invoke(() =>
             {
                 invoked = true;
-                Assert.AreSame(thread, Thread.CurrentThread);
+                Assert.AreSame(dispatcher.Thread, Thread.CurrentThread);
             });
 
             Assert.IsTrue(invoked);
 
             dispatcher.InvokeShutdown();
-            thread.Join();
+            dispatcher.Thread.Join();
         }
 
         [TestMethod]
         public void Yield()
         {
-            Dispatcher dispatcher = null;
-
-            var dispatcherAvailableEvent = new AutoResetEvent(false);
-
-            var thread = new Thread(() =>
-            {
-                dispatcher = Dispatcher.CurrentDispatcher; // Creates dispatcher for thread
-                dispatcherAvailableEvent.Set();
-                Dispatcher.Run();
-            });
-            thread.Start();
-            dispatcherAvailableEvent.WaitOne();
+            Dispatcher dispatcher = CreateDispatcherOnNewThread();
 
             var stop = new AutoResetEvent(false); // Don't think I need this, Yield breaks the loop
             dispatcher.BeginInvoke(new Action(async () =>
@@ -134,20 +101,23 @@ namespace testdo
 
             stop.Set();
             dispatcher.InvokeShutdown();
-            thread.Join();
+            dispatcher.Thread.Join();
         }
 
-        private static Dispatcher CreateDispatcherOnOtherThread()
+        private Dispatcher CreateDispatcherOnNewThread()
         {
             Dispatcher dispatcher = null;
+            var dispatcherAvailableEvent = new AutoResetEvent(false);
 
             var thread = new Thread(() =>
             {
-                dispatcher = Dispatcher.CurrentDispatcher;
+                dispatcher = Dispatcher.CurrentDispatcher; // Creates dispatcher for thread
+                dispatcherAvailableEvent.Set();
+                Dispatcher.Run();
             });
-
             thread.Start();
-            thread.Join();
+
+            dispatcherAvailableEvent.WaitOne();
 
             return dispatcher;
         }
