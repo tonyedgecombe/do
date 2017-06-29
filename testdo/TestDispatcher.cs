@@ -131,6 +131,44 @@ namespace testdo
             dispatcher.Thread.Join();
         }
 
+        [TestMethod]
+        public void NestedFrames()
+        {
+            Dispatcher dispatcher = null;
+            DispatcherFrame frame1 = null;
+            DispatcherFrame frame2 = null;
+            var dispatcherAvailableEvent = new AutoResetEvent(false);
+            var frame2AvailableEvent = new AutoResetEvent(false);
+
+            var thread = new Thread(() =>
+            {
+                dispatcher = Dispatcher.CurrentDispatcher; // Creates dispatcher for thread
+                frame1 = new DispatcherFrame(false);
+
+                dispatcherAvailableEvent.Set();
+                Dispatcher.PushFrame(frame1);
+            });
+            thread.Start();
+            dispatcherAvailableEvent.WaitOne();
+
+            var frame2Exited = new AutoResetEvent(false);
+            dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
+            {
+                frame2 = new DispatcherFrame(false);
+                frame2AvailableEvent.Set();
+                Dispatcher.PushFrame(frame2);
+                frame2Exited.Set();
+            }));
+
+            frame2AvailableEvent.WaitOne();
+
+            frame2.Continue = false;
+            frame2Exited.WaitOne();
+
+            frame1.Continue = false;
+            dispatcher.Thread.Join();
+        }
+
 
         private Dispatcher CreateDispatcherOnNewThread()
         {
